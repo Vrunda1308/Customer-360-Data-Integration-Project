@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "project3synapse"
+		},
+		"AzureSqlDatabase1_password": {
+			"value": ""
+		},
+		"project3synapse-WorkspaceDefaultSqlServer_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:project3synapse.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_server": {
+			"value": "bootcampserver.database.windows.net"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_database": {
+			"value": "bootcampdatabase"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_userName": {
+			"value": "adminvrunda"
+		},
+		"project3synapse-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://bootcampadls1.dfs.core.windows.net"
+		}
+	}
+}
