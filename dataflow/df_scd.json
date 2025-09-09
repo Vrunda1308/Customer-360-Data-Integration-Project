@@ -1,0 +1,195 @@
+{
+	"name": "df_scd",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "source"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureSqlDatabase1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Target"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "AzureSqlDatabase1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureSqlDatabase1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "RenameColumns"
+				},
+				{
+					"name": "GenerateHashKey"
+				},
+				{
+					"name": "JoinTables"
+				},
+				{
+					"name": "split1"
+				},
+				{
+					"name": "UpdateAudit"
+				},
+				{
+					"name": "alterRow1"
+				},
+				{
+					"name": "union1"
+				},
+				{
+					"name": "InsertAudit"
+				},
+				{
+					"name": "alterRow2"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          CustomerID as short,",
+				"          Name as string,",
+				"          Email as string,",
+				"          Address as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'sliver/Customers') ~> source",
+				"source(output(",
+				"          TGT_ID as integer,",
+				"          TGT_HASHKEY as long",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'Select CUSTOMERID as TGT_ID, HASHKEY as TGT_HASHKEY from CUSTOMERS_SCD WHERE\\nISACTIVE = 1\\n',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> Target",
+				"source select(mapColumn(",
+				"          each(match(1==1),",
+				"               concat('Src_',$$) = $$)",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+				"RenameColumns derive(Src_Hashkey = crc32(concat(     toString(Src_CustomerID),     toString(Src_Name),     toString(Src_Email),     toString(Src_Address) ))) ~> GenerateHashKey",
+				"GenerateHashKey, Target join(Src_CustomerID == TGT_ID,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinTables",
+				"JoinTables split(isNull(TGT_ID),",
+				"     Src_CustomerID==TGT_ID && Src_Hashkey!=TGT_HASHKEY,",
+				"     disjoint: false) ~> split1@(Insert, Update)",
+				"split1@Update derive(Updateddate = currentTimestamp(),",
+				"          Updatedby = 'dataflow-updated',",
+				"          isActive = 0) ~> UpdateAudit",
+				"UpdateAudit alterRow(upsertIf(1==1)) ~> alterRow1",
+				"split1@Insert, split1@Update union(byName: true)~> union1",
+				"union1 derive(Createddate = currentTimestamp(),",
+				"          Createdby = 'dataflow',",
+				"          Updateddate = currentTimestamp(),",
+				"          Updatedby = 'dataflow-updated',",
+				"          isActive = 1) ~> InsertAudit",
+				"InsertAudit alterRow(upsertIf(1==1)) ~> alterRow2",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          CUSTOMERID as integer,",
+				"          NAME as string,",
+				"          EMAIL as string,",
+				"          ADDRESS as string,",
+				"          CREATEDDATE as timestamp,",
+				"          CREATEDBY as string,",
+				"          UPDATEDDATE as timestamp,",
+				"          UPDATEDBY as string,",
+				"          HASHKEY as long,",
+				"          ISACTIVE as boolean",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'CUSTOMERS_SCD',",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: true,",
+				"     keys:['CUSTOMERID'],",
+				"     stagingSchemaName: '',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          CUSTOMERID = Src_CustomerID,",
+				"          NAME = Src_Name,",
+				"          EMAIL = Src_Email,",
+				"          ADDRESS = Src_Address,",
+				"          UPDATEDDATE = Updateddate,",
+				"          UPDATEDBY = Updatedby,",
+				"          HASHKEY = Src_Hashkey,",
+				"          ISACTIVE = isActive",
+				"     )) ~> sink1",
+				"alterRow2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          CUSTOMERID as integer,",
+				"          NAME as string,",
+				"          EMAIL as string,",
+				"          ADDRESS as string,",
+				"          CREATEDDATE as timestamp,",
+				"          CREATEDBY as string,",
+				"          UPDATEDDATE as timestamp,",
+				"          UPDATEDBY as string,",
+				"          HASHKEY as long,",
+				"          ISACTIVE as boolean",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'CUSTOMERS_SCD',",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: true,",
+				"     keys:['CUSTOMERID','HASHKEY'],",
+				"     stagingSchemaName: '',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          CUSTOMERID = Src_CustomerID,",
+				"          NAME = Src_Name,",
+				"          EMAIL = Src_Email,",
+				"          ADDRESS = Src_Address,",
+				"          CREATEDDATE = Createddate,",
+				"          CREATEDBY = Createdby,",
+				"          UPDATEDDATE = Updateddate,",
+				"          UPDATEDBY = Updatedby,",
+				"          HASHKEY = Src_Hashkey,",
+				"          ISACTIVE = isActive",
+				"     )) ~> sink2"
+			]
+		}
+	}
+}

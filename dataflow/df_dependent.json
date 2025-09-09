@@ -1,0 +1,366 @@
+{
+	"name": "df_dependent",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "CustomerServiceIntercations"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "InStoreTranscations"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "LoyaltyAccounts"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "LoyaltyTranscations"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "OnlineTranscation"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink2"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink3"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink4"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink5"
+				}
+			],
+			"transformations": [
+				{
+					"name": "filter1"
+				},
+				{
+					"name": "aggregate1"
+				},
+				{
+					"name": "alterRow1"
+				},
+				{
+					"name": "filter2"
+				},
+				{
+					"name": "aggregate2"
+				},
+				{
+					"name": "alterRow2"
+				},
+				{
+					"name": "filter3"
+				},
+				{
+					"name": "aggregate3"
+				},
+				{
+					"name": "alterRow3"
+				},
+				{
+					"name": "filter4"
+				},
+				{
+					"name": "aggregate4"
+				},
+				{
+					"name": "alterRow4"
+				},
+				{
+					"name": "filter5"
+				},
+				{
+					"name": "aggregate5"
+				},
+				{
+					"name": "alterRow5"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          InteractionID as short,",
+				"          CustomerID as short,",
+				"          DateTime as timestamp,",
+				"          AgentID as short,",
+				"          IssueType as string,",
+				"          ResolutionStatus as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'bronze',",
+				"     fileName: 'CustomerServiceInteractions.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> CustomerServiceIntercations",
+				"source(output(",
+				"          TransactionID as short,",
+				"          CustomerID as short,",
+				"          StoreID as short,",
+				"          DateTime as timestamp,",
+				"          Amount as double,",
+				"          PaymentMethod as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'bronze',",
+				"     fileName: 'InStoreTransactions.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> InStoreTranscations",
+				"source(output(",
+				"          LoyaltyID as short,",
+				"          CustomerID as short,",
+				"          PointsEarned as short,",
+				"          TierLevel as string,",
+				"          JoinDate as date",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'bronze',",
+				"     fileName: 'LoyaltyAccounts.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> LoyaltyAccounts",
+				"source(output(",
+				"          LoyaltyID as short,",
+				"          DateTime as timestamp,",
+				"          PointsChange as short,",
+				"          Reason as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'bronze',",
+				"     fileName: 'LoyaltyTransactions.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> LoyaltyTranscations",
+				"source(output(",
+				"          OrderID as short,",
+				"          CustomerID as short,",
+				"          ProductID as short,",
+				"          DateTime as timestamp,",
+				"          PaymentMethod as string,",
+				"          Amount as double,",
+				"          Status as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'bronze',",
+				"     fileName: 'OnlineTransactions.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> OnlineTranscation",
+				"CustomerServiceIntercations filter(!isNull('CustomerID')) ~> filter1",
+				"filter1 aggregate(groupBy(CustomerID),",
+				"     each(match(name!='CustomerID'), $$ = first($$))) ~> aggregate1",
+				"aggregate1 alterRow(upsertIf(1==1)) ~> alterRow1",
+				"InStoreTranscations filter(!isNull('TranscationID')) ~> filter2",
+				"filter2 aggregate(groupBy(TransactionID),",
+				"     each(match(name!='TransactionID'), $$ = first($$))) ~> aggregate2",
+				"aggregate2 alterRow(upsertIf(1==1)) ~> alterRow2",
+				"LoyaltyAccounts filter(!isNull('LoyaltyID')) ~> filter3",
+				"filter3 aggregate(groupBy(LoyaltyID),",
+				"     each(match(name!='LoyaltyID'), $$ = first($$))) ~> aggregate3",
+				"aggregate3 alterRow(upsertIf(1==1)) ~> alterRow3",
+				"LoyaltyTranscations filter(!isNull(LoyaltyID)) ~> filter4",
+				"filter4 aggregate(groupBy(LoyaltyID),",
+				"     each(match(name!='LoyaltyID'), $$ = first($$))) ~> aggregate4",
+				"aggregate4 alterRow(upsertIf(1==1)) ~> alterRow4",
+				"OnlineTranscation filter(!isNull(OrderID)) ~> filter5",
+				"filter5 aggregate(groupBy(OrderID),",
+				"     each(match(name!='OrderID'), $$ = first($$))) ~> aggregate5",
+				"aggregate5 alterRow(upsertIf(1==1)) ~> alterRow5",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'sliver/CustomerServiceInteractions',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     upsertable: true,",
+				"     keys:['CustomerID'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1",
+				"alterRow2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'sliver/InStoreTranactions',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     upsertable: true,",
+				"     keys:['TransactionID'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink2",
+				"alterRow3 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'sliver/LoyaltyAccounts',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     upsertable: true,",
+				"     keys:['LoyaltyID'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          LoyaltyID,",
+				"          CustomerID,",
+				"          PointsEarned,",
+				"          TierLevel,",
+				"          JoinDate",
+				"     )) ~> sink3",
+				"alterRow4 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'sliver/LoyaltyTranscations',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     upsertable: true,",
+				"     keys:['LoyaltyID'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          LoyaltyID,",
+				"          DateTime,",
+				"          PointsChange,",
+				"          Reason",
+				"     )) ~> sink4",
+				"alterRow5 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'sliver/OnlineTranscations',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     upsertable: true,",
+				"     keys:['OrderID'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          OrderID,",
+				"          CustomerID,",
+				"          ProductID,",
+				"          DateTime,",
+				"          PaymentMethod,",
+				"          Amount,",
+				"          Status",
+				"     )) ~> sink5"
+			]
+		}
+	}
+}

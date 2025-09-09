@@ -1,0 +1,273 @@
+{
+	"name": "df_parent",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Agents"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Customers"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Products"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Stores"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink2"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink3"
+				},
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink4"
+				}
+			],
+			"transformations": [
+				{
+					"name": "filter1"
+				},
+				{
+					"name": "aggregate1"
+				},
+				{
+					"name": "alterRow1"
+				},
+				{
+					"name": "filter2"
+				},
+				{
+					"name": "aggregate2"
+				},
+				{
+					"name": "alterRow2"
+				},
+				{
+					"name": "filter3"
+				},
+				{
+					"name": "aggregate3"
+				},
+				{
+					"name": "alterRow3"
+				},
+				{
+					"name": "filter4"
+				},
+				{
+					"name": "aggregate4"
+				},
+				{
+					"name": "alterRow4"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          AgentID as short,",
+				"          Name as string,",
+				"          Department as string,",
+				"          Shift as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'bronze',",
+				"     fileName: 'Agents.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> Agents",
+				"source(output(",
+				"          CustomerID as short,",
+				"          Name as string,",
+				"          Email as string,",
+				"          Address as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'bronze',",
+				"     fileName: 'Customers.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> Customers",
+				"source(output(",
+				"          ProductID as short,",
+				"          Name as string,",
+				"          Category as string,",
+				"          Price as double",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'bronze',",
+				"     fileName: 'Products.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> Products",
+				"source(output(",
+				"          StoreID as short,",
+				"          Location as string,",
+				"          Manager as string,",
+				"          OpenHours as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'bronze',",
+				"     fileName: 'Stores.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> Stores",
+				"Agents filter(!isNull(AgentID)) ~> filter1",
+				"filter1 aggregate(groupBy(AgentID),",
+				"     each(match(name!='AgentID'), $$ = first($$))) ~> aggregate1",
+				"aggregate1 alterRow(upsertIf(1==1)) ~> alterRow1",
+				"Customers filter(!isNull(CustomerID)) ~> filter2",
+				"filter2 aggregate(groupBy(CustomerID),",
+				"     each(match(name!='CustomerID'), $$ = first($$))) ~> aggregate2",
+				"aggregate2 alterRow(upsertIf(1==1)) ~> alterRow2",
+				"Products filter(!isNull(ProductID)) ~> filter3",
+				"filter3 aggregate(groupBy(ProductID),",
+				"     each(match(name!='ProductID'), $$ = first($$))) ~> aggregate3",
+				"aggregate3 alterRow(upsertIf(1==1)) ~> alterRow3",
+				"Stores filter(!isNull('StoreID')) ~> filter4",
+				"filter4 aggregate(groupBy(StoreID),",
+				"     each(match(name!='StoreID'), $$ = first($$))) ~> aggregate4",
+				"aggregate4 alterRow(upsertIf(1==1)) ~> alterRow4",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'sliver/Agents',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     upsertable: true,",
+				"     keys:['AgentID'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1",
+				"alterRow2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'sliver/Customers',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     upsertable: true,",
+				"     keys:['CustomerID'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink2",
+				"alterRow3 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'sliver/Products',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     upsertable: true,",
+				"     keys:['ProductID'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink3",
+				"alterRow4 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'sliver/Stores',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     upsertable: true,",
+				"     keys:['StoreID'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink4"
+			]
+		}
+	}
+}

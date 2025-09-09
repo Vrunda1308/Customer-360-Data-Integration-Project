@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 2",
+	"properties": {
+		"content": {
+			"query": "IF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'SynapseDeltaFormat') \n\tCREATE EXTERNAL FILE FORMAT [SynapseDeltaFormat] \n\tWITH ( FORMAT_TYPE = Delta)\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'project3_bootcampadls1_dfs_core_windows_net') \n\tCREATE EXTERNAL DATA SOURCE [project3_bootcampadls1_dfs_core_windows_net] \n\tWITH (\n\t\tLOCATION = 'abfss://project3@bootcampadls1.dfs.core.windows.net' \n\t)\nGO\n\nCREATE EXTERNAL TABLE dbo.customers1 (\n\t[CustomerID] smallint,\n\t[Name] nvarchar(4000),\n\t[Email] nvarchar(4000),\n\t[Address] nvarchar(4000)\n\t)\n\tWITH (\n\tLOCATION = 'sliver/Customers/',\n\tDATA_SOURCE = [project3_bootcampadls1_dfs_core_windows_net],\n\tFILE_FORMAT = [SynapseDeltaFormat]\n\t)\nGO\n\n\nSELECT TOP 100 * FROM dbo.customers1\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "project3",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,195 @@
+{
+	"name": "df_scd2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "project3synapse-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					},
+					"name": "source"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureSqlDatabase1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "target"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "AzureSqlDatabase1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureSqlDatabase1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Rename"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "join"
+				},
+				{
+					"name": "split1"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "alterRow1"
+				},
+				{
+					"name": "union1"
+				},
+				{
+					"name": "derivedColumn3"
+				},
+				{
+					"name": "alterRow2"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          LoyaltyID as short,",
+				"          DateTime as timestamp,",
+				"          PointsChange as short,",
+				"          Reason as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'project3',",
+				"     folderPath: 'sliver/LoyaltyTranscations') ~> source",
+				"source(output(",
+				"          tgt_id as integer,",
+				"          tgt_Hashkey as long",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'select LoyaltyID as tgt_id,Hashkey as tgt_Hashkey from Loyalty_scd\\nwhere Isactive = 1',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> target",
+				"source select(mapColumn(",
+				"          each(match(1==1),",
+				"               concat('Src_',$$) = $$)",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> Rename",
+				"Rename derive(Src_Hashkey = crc32(concat(toString(Src_LoyaltyID),toString(Src_PointsChange),Src_Reason,toString(Src_DateTime)))) ~> derivedColumn1",
+				"derivedColumn1, target join(Src_LoyaltyID == tgt_id,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join",
+				"join split(isNull(tgt_id),",
+				"     Src_LoyaltyID == tgt_id && Src_Hashkey != tgt_Hashkey,",
+				"     disjoint: false) ~> split1@(Insert, Update)",
+				"split1@Update derive(Updateddate = currentTimestamp(),",
+				"          Updatedby = 'dataflow-updated',",
+				"          isActive = 0) ~> derivedColumn2",
+				"derivedColumn2 alterRow(upsertIf(1==1)) ~> alterRow1",
+				"split1@Insert, split1@Update union(byName: true)~> union1",
+				"union1 derive(Createddate = currentTimestamp(),",
+				"          Createdby = 'dataflow',",
+				"          Updateddate = currentTimestamp(),",
+				"          Updatedby = 'dataflow-updated',",
+				"          isActive = 1) ~> derivedColumn3",
+				"derivedColumn3 alterRow(upsertIf(1==1)) ~> alterRow2",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          LoyaltyID as integer,",
+				"          Datetime as timestamp,",
+				"          PointsChange as integer,",
+				"          Reason as string,",
+				"          CreatedDate as timestamp,",
+				"          UpdateDate as timestamp,",
+				"          CreatedBy as string,",
+				"          UpdatedBy as string,",
+				"          Hashkey as long,",
+				"          Isactive as integer",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'Loyalty_scd',",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: true,",
+				"     keys:['LoyaltyID'],",
+				"     stagingSchemaName: '',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          LoyaltyID = Src_LoyaltyID,",
+				"          Datetime = Src_DateTime,",
+				"          PointsChange = Src_PointsChange,",
+				"          Reason = Src_Reason,",
+				"          UpdateDate = Updateddate,",
+				"          UpdatedBy = Updatedby,",
+				"          Hashkey = Src_Hashkey,",
+				"          Isactive = isActive",
+				"     )) ~> sink1",
+				"alterRow2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          LoyaltyID as integer,",
+				"          Datetime as timestamp,",
+				"          PointsChange as integer,",
+				"          Reason as string,",
+				"          CreatedDate as timestamp,",
+				"          UpdateDate as timestamp,",
+				"          CreatedBy as string,",
+				"          UpdatedBy as string,",
+				"          Hashkey as long,",
+				"          Isactive as integer",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'Loyalty_scd',",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: true,",
+				"     keys:['LoyaltyID'],",
+				"     stagingSchemaName: '',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          LoyaltyID = Src_LoyaltyID,",
+				"          Datetime = Src_DateTime,",
+				"          PointsChange = Src_PointsChange,",
+				"          Reason = Src_Reason,",
+				"          CreatedDate = Createddate,",
+				"          UpdateDate = Updateddate,",
+				"          CreatedBy = Createdby,",
+				"          UpdatedBy = Updatedby,",
+				"          Hashkey = Src_Hashkey,",
+				"          Isactive = isActive",
+				"     )) ~> sink2"
+			]
+		}
+	}
+}
